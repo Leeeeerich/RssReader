@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,15 +30,28 @@ public class CountingPagesSize {
     }
 
     private void method(List<News> newsList) throws IOException {
-        ExecutorService threadPool = Executors.newFixedThreadPool(getSizePoolThread());
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
         newsList.remove(0);
         for(News news : newsList){
-            long result = countingPageSize(getUrlConnection(news.getUrl()));
-            Log.d(getClass().getName(), "Size of = " + result);
+            //long result = countingPageSize(getUrlConnection(news.getUrl()));
+            try {
+                Log.d(getClass().getName(), "Size of = " + getCallablePageSize(news.getUrl()).call());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         threadPool.shutdown();
+    }
+
+    private Callable<Long> getCallablePageSize(final String url) throws IOException {
+        return new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                return countingPageSize(getUrlConnection(url));
+            }
+        };
     }
 
     public long countingPageSize(URLConnection connection) throws IOException {
@@ -47,6 +61,7 @@ public class CountingPagesSize {
     }
 
     private int getSizePoolThread(){
+        Log.d(getClass().getName(), "Your apparature has = " + Runtime.getRuntime().availableProcessors());
         return Runtime.getRuntime().availableProcessors() + 1;
     }
 
