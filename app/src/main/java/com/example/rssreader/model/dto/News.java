@@ -4,16 +4,16 @@ public class News {
 
     private String mTitle;
     private String mUrl;
-    private String mText;
+    private String mSize;
 
     public News(){
 
     }
 
-    public News(String title, String url, String text) {
+    public News(String title, String url, String size) {
         mTitle = title;
         mUrl = url;
-        mText = text;
+        mSize = size;
     }
 
 
@@ -33,11 +33,11 @@ public class News {
         mUrl = url;
     }
 
-    public String getText() {
-        return mText;
+    public String getSize() {
+        return mSize;
     }
 
-    public void setText(String text) {
-        mText = text;
+    public void setSize(String size) {
+        mSize = size;
     }
 }

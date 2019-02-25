@@ -18,7 +18,7 @@ public class SaxParser {
     private List<News> mNewsList = new ArrayList<>();
     private ISaxParser mISaxParser;
 
-    public void setISaxParserListener(ISaxParser saxParser){
+    public void setISaxParserListener(ISaxParser saxParser) {
         this.mISaxParser = saxParser;
     }
 
@@ -27,56 +27,60 @@ public class SaxParser {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
-            DefaultHandler handler = new DefaultHandler() {
-                News mNews;
-
-                boolean item = false;
-                boolean name = false;
-                boolean link = false;
-
-                public void startElement(String uri, String localName,
-                                         String qName, Attributes attributes)
-                        throws SAXException {
-                    if(qName.equalsIgnoreCase("item")){
-                        item = true;
-                    }
-                    if (qName.equalsIgnoreCase("title")) {
-                        name = true;
-                    }
-                    if (qName.equalsIgnoreCase("link")) {
-                        link = true;
-                    }
-                }
-
-                public void endElement(String uri, String localName,
-                                       String qName) throws SAXException {
-                }
-
-                public void characters(char ch[], int start, int length)
-                        throws SAXException {
-
-                    if (item & name) {
-                        mNews = new News();
-
-                        mNews.setTitle(new String(ch, start, length));
-                        name = false;
-                    }
-                    if (item & link) {
-                        mNews.setUrl(new String(ch, start, length));
-                        link = false;
-
-                        mNewsList.add(mNews);
-                        mNews = null;
-                    }
-                }
-
-            };
-            saxParser.parse(connection.getInputStream(), handler);
+            saxParser.parse(connection.getInputStream(), createHandler());
 
         } catch (
                 Exception e) {
             e.printStackTrace();
         }
+        mNewsList.remove(0);
         mISaxParser.getListNews(mNewsList);
     }
+
+
+    public DefaultHandler createHandler() {
+        return new DefaultHandler() {
+            News mNews;
+            boolean item = false;
+            boolean name = false;
+            boolean link = false;
+
+            public void startElement(String uri, String localName,
+                                     String qName, Attributes attributes)
+                    throws SAXException {
+                if (qName.equalsIgnoreCase("item")) {
+                    item = true;
+                } else if (qName.equalsIgnoreCase("title")) {
+                    name = true;
+                } else if (qName.equalsIgnoreCase("link")) {
+                    link = true;
+                }
+            }
+
+            public void endElement(String uri, String localName,
+                                   String qName) throws SAXException {
+            }
+
+            public void characters(char ch[], int start, int length)
+                    throws SAXException {
+
+                if (item & name) {
+                    mNews = new News();
+
+                    mNews.setTitle(new String(ch, start, length));
+                    name = false;
+                }
+                if (item & link) {
+                    mNews.setUrl(new String(ch, start, length));
+                    link = false;
+
+                    if (!mNews.getUrl().isEmpty()) mNewsList.add(mNews);
+                    mNews = null;
+                }
+            }
+
+        };
+    }
+
+
 }

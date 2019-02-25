@@ -42,4 +42,16 @@
         app:layout_constraintEnd_toEndOf="@+id/tvUrl"
         app:layout_constraintStart_toStartOf="@+id/tvUrl"
         app:layout_constraintTop_toBottomOf="@+id/tvUrl" />
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvSize" />
 </android.support.constraint.ConstraintLayout>
