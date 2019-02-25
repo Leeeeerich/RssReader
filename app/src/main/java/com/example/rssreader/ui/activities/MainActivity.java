@@ -8,23 +8,25 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.rssreader.R;
 import com.example.rssreader.model.dto.News;
-import com.example.rssreader.service.parser.CountingPagesSize;
 import com.example.rssreader.service.parser.ISaxParser;
 import com.example.rssreader.service.parser.NetworkFactory;
+import com.example.rssreader.service.parser.PagesSizeCalculator;
 import com.example.rssreader.service.parser.SaxParser;
 import com.example.rssreader.ui.adapters.ItemNewsAdapter;
 
 import java.io.IOException;
-import java.util.List;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements ISaxParser {
+public class MainActivity extends AppCompatActivity implements ISaxParser, PagesSizeCalculator.Callbacks {
 
     private EditText mEtEnterUrl;
     private TextView mTvTime;
@@ -32,8 +34,8 @@ public class MainActivity extends AppCompatActivity implements ISaxParser {
     private ProgressBar mProgressBar;
     private ItemNewsAdapter mItemNewsAdapter;
     private SaxParser mSaxParser;
-    private CountingPagesSize mCountingPagesSize;
-    private List<News> mNewsList;
+    private PagesSizeCalculator mPagesSizeCalculator;
+    private Map<String, News> mNewsList = new HashMap<>();
     private Long mStartTime;
 
     @Override
@@ -44,14 +46,13 @@ public class MainActivity extends AppCompatActivity implements ISaxParser {
         mSaxParser = new SaxParser();
         mSaxParser.setISaxParserListener(this);
 
-        mCountingPagesSize = new CountingPagesSize();
+        mPagesSizeCalculator = new PagesSizeCalculator();
 
         mProgressBar = findViewById(R.id.progressBar);
         mTvTime = findViewById(R.id.tvTime);
         mTvNumberOf = findViewById(R.id.tvNumberOf);
         mEtEnterUrl = findViewById(R.id.etUrl);
-        Button btStart = findViewById(R.id.btStart);
-        btStart.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btStart).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new MyTask().execute(mEtEnterUrl.getText().toString());
@@ -69,9 +70,32 @@ public class MainActivity extends AppCompatActivity implements ISaxParser {
     }
 
     @Override
-    public void getListNews(List<News> list) {
-        mNewsList = list;
-        mCountingPagesSize.setNewsList(list);
+    public void onLoadItem(News news) {
+        mPagesSizeCalculator.init(news);
+    }
+
+    @Override
+    public void onEndDocument() {
+        mPagesSizeCalculator.setNoMoreData();
+    }
+
+    @Override
+    public void onDataCallbacks(String url, long size) {
+        News news = mNewsList.get(url);
+        if(news != null) {
+            news.setSize(String.valueOf(size));
+            mNewsList.put(url, news);
+        }
+    }
+
+    @Override
+    public void onAllParsed() {
+        mItemNewsAdapter.setNewsList(new ArrayList<>(mNewsList.values()));
+    }
+
+    @Override
+    public void onErrorParse(Exception e) {
+        Log.e(getLocalClassName(), e.getMessage());
     }
 
     class MyTask extends AsyncTask<String, Void, Void> {
@@ -86,12 +110,11 @@ public class MainActivity extends AppCompatActivity implements ISaxParser {
 
         @Override
         protected Void doInBackground(String... params) {
-            for (String s : params) {
-                try {
-                    mSaxParser.parser(NetworkFactory.getUrlConnection(s));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                InputStream is = NetworkFactory.getUrlConnection(params[0]).getInputStream();
+                mSaxParser.parser(is);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             return null;
         }
@@ -106,17 +129,6 @@ public class MainActivity extends AppCompatActivity implements ISaxParser {
             String finishTime = String.valueOf((endTime - mStartTime) / 1000000);
             mTvTime.setText(getString(R.string.time, finishTime));
             mTvNumberOf.setText(getString(R.string.number_of, String.valueOf(mNewsList.size())));
-            mItemNewsAdapter.setNewsList(mNewsList);
-
-//            try {
-//                URLConnection connection = new NetworkFactory.Builder("123456")
-//                        .addProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)")
-//                        .addProperty("Content-Type", "text/plain; charset=utf-8")
-//                        .build();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-
         }
     }
 }
