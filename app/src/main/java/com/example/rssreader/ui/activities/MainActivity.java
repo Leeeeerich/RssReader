@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
     private PagesSizeCalculator mPagesSizeCalculator;
     private List<News> mNewsList = new ArrayList<>();
     private Long mStartTime;
-    private AsyncTask mCalculatePagesSizeTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         findViewById(R.id.btStart).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCalculatePagesSizeTask = new CalculatePagesSizeTask().execute(mEtEnterUrl.getText().toString());
+                new CalculatePagesSizeTask().execute(mEtEnterUrl.getText().toString());
             }
         });
 
@@ -71,21 +70,21 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
 
     @Override
     public void onLoadItem(News news) {
-        mPagesSizeCalculator.init(news);
+        mPagesSizeCalculator.addTask(news);
     }
 
     @Override
     public void onEndDocument() {
-        mPagesSizeCalculator.setNoMoreData();
+        mPagesSizeCalculator.shutdownThreadPool();
     }
 
     @Override
-    public void onDataCallbacks(News news) {
+    public void onDataLoaded(News news) {
         mNewsList.add(news);
     }
 
     @Override
-    public void onAllParsed() {
+    public void finishedCalculated() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -107,9 +106,7 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         Log.e(getLocalClassName(), e.getMessage());
     }
 
-    class CalculatePagesSizeTask extends AsyncTask<String, Integer, Void> {
-        InputStream is;
-
+    class CalculatePagesSizeTask extends AsyncTask<String, Void, Void> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -120,27 +117,22 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
 
         @Override
         protected Void doInBackground(String... params) {
+            InputStream is = null;
             try {
                 is = NetworkFactory.getUrlConnection(params[0]).getInputStream();
                 mSaxParser.parser(is);
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            if (mCalculatePagesSizeTask != null)//cancel asynctask
-            {
-                try {
-                    is.close();
-                    mCalculatePagesSizeTask.cancel(true);
-                } catch (IOException e) {
-                    e.printStackTrace();
+            } finally {
+                if(is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+            return null;
         }
     }
 }
