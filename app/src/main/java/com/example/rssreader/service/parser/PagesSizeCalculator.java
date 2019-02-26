@@ -16,8 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PagesSizeCalculator {
 
     private ExecutorService mThreadPool;
-    private boolean isMoreData = false;
-    private AtomicInteger mCounter;
+    private boolean isNoMoreData;
+
+    private AtomicInteger mCounter = new AtomicInteger(0);
 
     private Callbacks mCallbacks;
 
@@ -29,19 +30,21 @@ public class PagesSizeCalculator {
         mThreadPool = Executors.newFixedThreadPool(getSizePoolThread());
 
         try {
-            increment();
-            mThreadPool.submit(startTask(news.getUrl()));
+
+            mThreadPool.submit(startTask(news));
         } catch (IOException e) {
             decrementAndCheck();
             Log.e(getClass().getName(), e.getMessage());
         }
+        mThreadPool.shutdown();
     }
 
-    private Callable<Void> startTask(final String url) throws IOException {
+    private Callable<Void> startTask(final News news) throws IOException {
         return new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                InputStream is = NetworkFactory.getUrlConnection(url).getInputStream();
+                increment();
+                InputStream is = NetworkFactory.getUrlConnection(news.getUrl()).getInputStream();
                 Log.d(getClass().getName(), "Ids thread = " + Thread.currentThread());
 
                 final int bufferSize = 1024;
@@ -54,24 +57,32 @@ public class PagesSizeCalculator {
                     out.append(buffer, 0, rsz);
                 }
 
-                mCallbacks.onDataCallbacks(url, out.length());
+                news.setSize(String.valueOf(out.length()));
+                mCallbacks.onDataCallbacks(news);
+                Log.d(getClass().getName(), "State of counter = " + mCounter);
+                decrementAndCheck();
                 return null;
             }
         };
     }
 
-    private void increment(){
+    private void increment() {
         mCounter.incrementAndGet();
     }
 
-    private void decrementAndCheck(){
-        if(!isMoreData & mCounter.decrementAndGet() == 0) {
-            mThreadPool.shutdown();
+    private void decrementAndCheck() {
+        if (isNoMoreData() & mCounter.decrementAndGet() == 0) {
+            Log.d(getClass().getName(), "No more task");
+            mCallbacks.onAllParsed();
         }
     }
 
-    public void setNoMoreData(){
-        this.isMoreData = false;
+    public synchronized void setNoMoreData() {
+        this.isNoMoreData = true;
+    }
+
+    public synchronized boolean isNoMoreData() {
+        return isNoMoreData;
     }
 
     private int getSizePoolThread() {
@@ -80,7 +91,7 @@ public class PagesSizeCalculator {
     }
 
     public interface Callbacks {
-        void onDataCallbacks(String url, long size);
+        void onDataCallbacks(News news);
 
         void onAllParsed();
     }

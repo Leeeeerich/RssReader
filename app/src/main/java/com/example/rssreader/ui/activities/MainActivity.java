@@ -23,8 +23,7 @@ import com.example.rssreader.ui.adapters.ItemNewsAdapter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements ISaxParser, PagesSizeCalculator.Callbacks {
 
@@ -35,8 +34,9 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
     private ItemNewsAdapter mItemNewsAdapter;
     private SaxParser mSaxParser;
     private PagesSizeCalculator mPagesSizeCalculator;
-    private Map<String, News> mNewsList = new HashMap<>();
+    private List<News> mNewsList = new ArrayList<>();
     private Long mStartTime;
+    private AsyncTask mCalculatePagesSizeTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
 
         mSaxParser = new SaxParser();
         mSaxParser.setISaxParserListener(this);
-
         mPagesSizeCalculator = new PagesSizeCalculator();
+        mPagesSizeCalculator.setCallbacks(this);
 
         mProgressBar = findViewById(R.id.progressBar);
         mTvTime = findViewById(R.id.tvTime);
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         findViewById(R.id.btStart).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new MyTask().execute(mEtEnterUrl.getText().toString());
+                mCalculatePagesSizeTask = new CalculatePagesSizeTask().execute(mEtEnterUrl.getText().toString());
             }
         });
 
@@ -80,17 +80,26 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
     }
 
     @Override
-    public void onDataCallbacks(String url, long size) {
-        News news = mNewsList.get(url);
-        if(news != null) {
-            news.setSize(String.valueOf(size));
-            mNewsList.put(url, news);
-        }
+    public void onDataCallbacks(News news) {
+        mNewsList.add(news);
     }
 
     @Override
     public void onAllParsed() {
-        mItemNewsAdapter.setNewsList(new ArrayList<>(mNewsList.values()));
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(getLocalClassName(), "All parsed");
+                Long endTime = System.nanoTime();
+                mProgressBar.setVisibility(View.INVISIBLE);
+                Log.d(getLocalClassName(), "Time running = " + (endTime - mStartTime) / 1000000);
+
+                String finishTime = String.valueOf((endTime - mStartTime) / 1000000);
+                mTvTime.setText(getString(R.string.time, finishTime));
+                mTvNumberOf.setText(getString(R.string.number_of, String.valueOf(mNewsList.size())));
+                mItemNewsAdapter.setNewsList(mNewsList);
+            }
+        });
     }
 
     @Override
@@ -98,7 +107,8 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         Log.e(getLocalClassName(), e.getMessage());
     }
 
-    class MyTask extends AsyncTask<String, Void, Void> {
+    class CalculatePagesSizeTask extends AsyncTask<String, Integer, Void> {
+        InputStream is;
 
         @Override
         protected void onPreExecute() {
@@ -111,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         @Override
         protected Void doInBackground(String... params) {
             try {
-                InputStream is = NetworkFactory.getUrlConnection(params[0]).getInputStream();
+                is = NetworkFactory.getUrlConnection(params[0]).getInputStream();
                 mSaxParser.parser(is);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -122,13 +132,15 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            Long endTime = System.nanoTime();
-            mProgressBar.setVisibility(View.INVISIBLE);
-            Log.d(getLocalClassName(), "Time running = " + (endTime - mStartTime) / 1000000);
-
-            String finishTime = String.valueOf((endTime - mStartTime) / 1000000);
-            mTvTime.setText(getString(R.string.time, finishTime));
-            mTvNumberOf.setText(getString(R.string.number_of, String.valueOf(mNewsList.size())));
+            if (mCalculatePagesSizeTask != null)//cancel asynctask
+            {
+                try {
+                    is.close();
+                    mCalculatePagesSizeTask.cancel(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
