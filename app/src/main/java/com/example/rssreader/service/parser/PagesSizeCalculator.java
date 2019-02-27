@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.example.rssreader.model.dto.News;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -27,7 +28,7 @@ public class PagesSizeCalculator {
         this.mCallbacks = callbacks;
     }
 
-    public void init() {
+    private void init() {
         mThreadPool = Executors.newFixedThreadPool(getSizePoolThread());
     }
 
@@ -38,25 +39,30 @@ public class PagesSizeCalculator {
     private Callable<Void> createTask(final News news) {
         return new Callable<Void>() {
             @Override
-            public Void call() throws Exception {
+            public Void call() {
                 increment();
-                InputStream is = NetworkFactory.getUrlConnection(news.getUrl()).getInputStream();
-                Log.d(getClass().getName(), "Ids thread = " + Thread.currentThread());
+                try {
+                    InputStream is = NetworkFactory.getUrlConnection(news.getUrl()).getInputStream();
+                    Log.d(getClass().getName(), "Ids thread = " + Thread.currentThread());
 
-                final int bufferSize = 1024;
-                final char[] buffer = new char[bufferSize];
-                final StringBuilder out = new StringBuilder();
-                Reader in = new InputStreamReader(is, StandardCharsets.UTF_8);
-                for (; ; ) {
-                    int rsz = in.read(buffer, 0, buffer.length);
-                    if (rsz < 0) break;
-                    out.append(buffer, 0, rsz);
+                    final int bufferSize = 1024;
+                    final char[] buffer = new char[bufferSize];
+                    final StringBuilder out = new StringBuilder();
+                    Reader in = new InputStreamReader(is, StandardCharsets.UTF_8);
+                    for (; ; ) {
+                        int rsz = in.read(buffer, 0, buffer.length);
+                        if (rsz < 0) break;
+                        out.append(buffer, 0, rsz);
+                    }
+
+                    news.setSize(String.valueOf(out.length()));
+                    mCallbacks.onDataLoaded(news);
+                    decrementAndCheck();
+                } catch (IOException e) {
+                    decrementAndCheck();
+                    mCallbacks.onErrorCalculated(e);
                 }
-
-                news.setSize(String.valueOf(out.length()));
-                mCallbacks.onDataLoaded(news);
-                Log.d(getClass().getName(), "State of counter = " + mCounter);
-                decrementAndCheck();
+                Log.d(getClass().getName(), "State of counter after = " + mCounter);
                 return null;
             }
         };
@@ -84,6 +90,8 @@ public class PagesSizeCalculator {
 
     public interface Callbacks {
         void onDataLoaded(News news);
+
+        void onErrorCalculated(IOException e);
 
         void finishedCalculated();
     }
