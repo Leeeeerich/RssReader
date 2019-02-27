@@ -39,8 +39,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
-        mViewModel
-
         mBinding.btStart.setOnClickListener(v -> initLoader(
                 ID_TASK_CALCULATED_PAGE_SIZE,
                 RssParserTaskLoader.createBundle(mBinding.etUrl.getText().toString()))
