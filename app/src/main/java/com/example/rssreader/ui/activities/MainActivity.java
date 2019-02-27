@@ -18,7 +18,6 @@ import com.example.rssreader.model.dto.News;
 import com.example.rssreader.service.loader.RssParserTaskLoader;
 import com.example.rssreader.ui.adapters.ItemNewsAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks<List<News>> {
@@ -30,7 +29,6 @@ public class MainActivity extends AppCompatActivity implements android.support.v
     private TextView mTvNumberOf;
     private ProgressBar mProgressBar;
     private ItemNewsAdapter mItemNewsAdapter;
-    private List<News> mNewsList = new ArrayList<>();
     private Long mStartTime;
 
     @Override
@@ -67,9 +65,9 @@ public class MainActivity extends AppCompatActivity implements android.support.v
         }
     }
 
+    @NonNull
     @Override
     public Loader<List<News>> onCreateLoader(int id, Bundle args) {
-        if (mNewsList != null) mNewsList.clear();
         mProgressBar.setVisibility(View.VISIBLE);
         mStartTime = System.nanoTime();
 

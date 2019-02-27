@@ -79,7 +79,7 @@ public class PagesSizeCalculator {
     private void decrementAndCheck() {
         if (mThreadPool.isShutdown() & mCounter.decrementAndGet() == 0) {
             Log.d(getClass().getName(), "No more task");
-            mCallbacks.finishedCalculated();
+            mCallbacks.CalculatingFinished();
         }
     }
 
@@ -93,6 +93,6 @@ public class PagesSizeCalculator {
 
         void onErrorCalculated(IOException e);
 
-        void finishedCalculated();
+        void CalculatingFinished();
     }
 }

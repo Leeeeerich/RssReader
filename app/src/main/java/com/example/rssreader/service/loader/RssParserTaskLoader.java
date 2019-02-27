@@ -73,9 +73,11 @@ public class RssParserTaskLoader extends AsyncTaskLoader<List<News>> implements 
             }
         }
         try {
-            Thread.sleep(10000);
+            synchronized (this) {
+                wait();
+            }
         } catch (InterruptedException e) {
-            Log.d(getClass().getName(), "Wake up loader thread");
+            e.printStackTrace();
         }
         return mNewsList;
     }
@@ -101,8 +103,10 @@ public class RssParserTaskLoader extends AsyncTaskLoader<List<News>> implements 
     }
 
     @Override
-    public void finishedCalculated() {
-        mThread.interrupt();
+    public void CalculatingFinished() {
+        synchronized (mThread) {
+            mThread.notify();
+        }
         deliverResult(mNewsList);
     }
 
