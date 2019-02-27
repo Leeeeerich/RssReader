@@ -6,16 +6,8 @@ public class News {
     private String mUrl;
     private String mSize;
 
-    public News(){
-
+    public News() {
     }
-
-    public News(String title, String url, String size) {
-        mTitle = title;
-        mUrl = url;
-        mSize = size;
-    }
-
 
     public String getTitle() {
         return mTitle;

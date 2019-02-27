@@ -1,40 +1,33 @@
 package com.example.rssreader.ui.adapters;
 
-import android.content.Context;
+import android.databinding.DataBindingUtil;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.rssreader.R;
+import com.example.rssreader.databinding.ItemNewsBinding;
 import com.example.rssreader.model.dto.News;
 
 import java.util.List;
 
 public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyViewHolder> {
     private List<News> mNewsList;
-    private LayoutInflater mInflater;
-
-    public ItemNewsAdapter(Context context) {
-        mInflater = LayoutInflater.from(context);
-    }
 
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View item = mInflater.inflate(R.layout.item_news, viewGroup, false);
-        return new MyViewHolder(item);
+        ItemNewsBinding binding = DataBindingUtil.inflate(
+                LayoutInflater.from(viewGroup.getContext()), R.layout.item_news, viewGroup, false);
+        return new MyViewHolder(binding.getRoot());
     }
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder myViewHolder, int position) {
         final News newsItem = mNewsList.get(position);
-        final Context context = myViewHolder.itemView.getContext();
-        myViewHolder.setTitle(context.getString(R.string.title, newsItem.getTitle()));
-        myViewHolder.setUrl(context.getString(R.string.url, newsItem.getUrl()));
-        myViewHolder.setSize(context.getString(R.string.size, newsItem.getSize()));
+        myViewHolder.setBinding(newsItem);
     }
 
     @Override
@@ -49,27 +42,15 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
 
     class MyViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView mTitle;
-        private TextView mUrl;
-        private TextView mSize;
+        private ItemNewsBinding mBinding;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            mTitle = itemView.findViewById(R.id.tvTitle);
-            mUrl = itemView.findViewById(R.id.tvUrl);
-            mSize = itemView.findViewById(R.id.tvSize);
+            mBinding = DataBindingUtil.bind(itemView);
         }
 
-        public void setTitle(String title) {
-            mTitle.setText(title);
-        }
-
-        public void setUrl(String url) {
-            mUrl.setText(url);
-        }
-
-        public void setSize(String size) {
-            mSize.setText(size);
+        public void setBinding(News news) {
+            mBinding.setNews(news);
         }
     }
 
