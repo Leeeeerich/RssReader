@@ -7,6 +7,7 @@ import com.example.rssreader.model.dto.News;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,7 +46,7 @@ public class PagesSizeCalculator {
                 final int bufferSize = 1024;
                 final char[] buffer = new char[bufferSize];
                 final StringBuilder out = new StringBuilder();
-                Reader in = new InputStreamReader(is, "UTF-8");
+                Reader in = new InputStreamReader(is, StandardCharsets.UTF_8);
                 for (; ; ) {
                     int rsz = in.read(buffer, 0, buffer.length);
                     if (rsz < 0) break;

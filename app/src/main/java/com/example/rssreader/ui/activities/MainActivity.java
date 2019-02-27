@@ -2,6 +2,8 @@ package com.example.rssreader.ui.activities;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,6 +19,8 @@ import com.example.rssreader.model.dto.News;
 import com.example.rssreader.service.parser.ISaxParser;
 import com.example.rssreader.service.parser.NetworkFactory;
 import com.example.rssreader.service.parser.PagesSizeCalculator;
+import com.example.rssreader.service.parser.RssParserKeys;
+import com.example.rssreader.service.parser.RssParserTaskLoader;
 import com.example.rssreader.service.parser.SaxParser;
 import com.example.rssreader.ui.adapters.ItemNewsAdapter;
 
@@ -25,7 +29,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ISaxParser, PagesSizeCalculator.Callbacks {
+public class MainActivity extends AppCompatActivity implements ISaxParser, PagesSizeCalculator.Callbacks, android.support.v4.app.LoaderManager.LoaderCallbacks {
 
     private EditText mEtEnterUrl;
     private TextView mTvTime;
@@ -54,7 +58,10 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         findViewById(R.id.btStart).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new CalculatePagesSizeTask().execute(mEtEnterUrl.getText().toString());
+                //new CalculatePagesSizeTask().execute(mEtEnterUrl.getText().toString());
+                Bundle bundle = new Bundle();
+                bundle.putString(RssParserKeys.LINK_TO_RSS_CHANNEL.toString(), mEtEnterUrl.getText().toString());
+                initLoader(0, bundle);
             }
         });
 
@@ -66,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         mItemNewsAdapter = new ItemNewsAdapter(this);
         recyclerView.setAdapter(mItemNewsAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
+    }
+
+    private void initLoader(int id, Bundle bundle) {
+        getSupportLoaderManager().initLoader(id, bundle, this);
     }
 
     @Override
@@ -106,6 +117,38 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
         Log.e(getLocalClassName(), e.getMessage());
     }
 
+//    @NonNull
+//    @Override
+//    public Loader onCreateLoader(int id, @Nullable Bundle bundle) {
+//        RssParserTaskLoader rssParserTaskLoader;
+//        //if (id == RssParserKeys.PARSE_CHANNEL_TASK_ID.ordinal()) {
+//            rssParserTaskLoader = new RssParserTaskLoader(this, bundle, mSaxParser);
+//            Log.d(getLocalClassName(), "onCreateLoader: " + rssParserTaskLoader.hashCode());
+//        //}
+//        return rssParserTaskLoader;
+//    }
+
+    @Override
+    public Loader onCreateLoader(int id, Bundle args) {
+        RssParserTaskLoader rssParserTaskLoader;
+        //if (id == RssParserKeys.PARSE_CHANNEL_TASK_ID.ordinal()) {
+        rssParserTaskLoader = new RssParserTaskLoader(this, args, mSaxParser);
+        Log.d(getLocalClassName(), "onCreateLoader: " + rssParserTaskLoader.hashCode());
+
+        return rssParserTaskLoader;
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull android.support.v4.content.Loader loader, Object o) {
+        Log.d(getLocalClassName(), "onFinishedTaskLoader: ");
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull android.support.v4.content.Loader loader) {
+
+    }
+
+
     class CalculatePagesSizeTask extends AsyncTask<String, Void, Void> {
         @Override
         protected void onPreExecute() {
@@ -124,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements ISaxParser, Pages
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                if(is != null) {
+                if (is != null) {
                     try {
                         is.close();
                     } catch (IOException e) {
