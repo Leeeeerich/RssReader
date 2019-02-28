@@ -11,7 +11,6 @@ import com.example.rssreader.service.parser.SaxParser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Executors;
 
 public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks {
 
@@ -47,24 +46,23 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
     }
 
     public void getNewsList(String url) {
-        Executors.callable(() -> {
-                    InputStream is = null;
+        new Thread(() -> {
+            InputStream is = null;
+            try {
+                is = NetworkFactory.getUrlConnection(url).getInputStream();
+                mSaxParser.parser(is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (is != null) {
                     try {
-                        is = NetworkFactory.getUrlConnection(url).getInputStream();
-                        mSaxParser.parser(is);
+                        is.close();
                     } catch (IOException e) {
                         e.printStackTrace();
-                    } finally {
-                        if (is != null) {
-                            try {
-                                is.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
                     }
                 }
-        );
+            }
+        }).start();
     }
 
     @Override

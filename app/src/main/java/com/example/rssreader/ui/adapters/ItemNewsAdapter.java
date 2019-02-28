@@ -11,6 +11,7 @@ import com.example.rssreader.R;
 import com.example.rssreader.databinding.ItemNewsBinding;
 import com.example.rssreader.model.dto.News;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyViewHolder> {
@@ -37,6 +38,16 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
 
     public void setNewsList(List<News> newsList) {
         this.mNewsList = newsList;
+        notifyDataSetChanged();
+    }
+
+    public void addNews(News news){
+        if(mNewsList == null) {
+            mNewsList = new ArrayList<>();
+            mNewsList.add(news);
+        } else {
+            mNewsList.add(news);
+        }
         notifyDataSetChanged();
     }
 
