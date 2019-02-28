@@ -13,7 +13,7 @@ import com.example.rssreader.R;
 import com.example.rssreader.databinding.ActivityMainBinding;
 import com.example.rssreader.ui.adapters.ItemNewsAdapter;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainViewModel.MainViewModelCallbacks {
 
     private ActivityMainBinding mBinding;
     private MainViewModel mViewModel;
@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mViewModel.setMainViewModelCallbacks(this);
+
         mBinding.btStart.setOnClickListener(v -> {
             mBinding.progressBar.setVisibility(View.VISIBLE);
             mStartTime = System.nanoTime();
@@ -48,5 +50,12 @@ public class MainActivity extends AppCompatActivity {
         mItemNewsAdapter = new ItemNewsAdapter();
         mBinding.recyclerView.setAdapter(mItemNewsAdapter);
         mBinding.recyclerView.setLayoutManager(linearLayoutManager);
+    }
+
+    @Override
+    public void noMoreData() {
+        mBinding.progressBar.setVisibility(View.INVISIBLE);
+        mBinding.tvTime.setText(String.valueOf((System.nanoTime() - mStartTime) / 1000000));
+        mBinding.tvNumberOf.setText(String.valueOf(mItemNewsAdapter.getItemCount()));
     }
 }

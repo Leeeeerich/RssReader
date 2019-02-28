@@ -20,6 +20,12 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
     private SaxParser mSaxParser;
     private PagesSizeCalculator mPagesSizeCalculator;
 
+    private NewsRepositoryCallbacks mNewsRepositoryCallbacks;
+
+    public void setNewsRepositoryCallbacks(NewsRepositoryCallbacks newsRepositoryCallbacks) {
+        mNewsRepositoryCallbacks = newsRepositoryCallbacks;
+    }
+
     private NewsRepository() {
         mSaxParser = new SaxParser();
         mSaxParser.setISaxParserListener(this);
@@ -91,7 +97,11 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
     }
 
     @Override
-    public void finishedCalculated() {
+    public void calculatingFinished() {
+        mNewsRepositoryCallbacks.noMoreData();
+    }
 
+    public interface NewsRepositoryCallbacks {
+        void noMoreData();
     }
 }
