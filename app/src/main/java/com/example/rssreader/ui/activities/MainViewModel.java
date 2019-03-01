@@ -32,16 +32,8 @@ public class MainViewModel extends ViewModel implements NewsRepository.NewsRepos
         mMainViewModelCallbacks = mainViewModelCallbacks;
     }
 
-    public MutableLiveData<News> getNewsMutableLiveData() {
-        return mNewsMutableLiveData;
-    }
-
     public void getNews(String url) {
         mNewsRepository.getNewsList(url.isEmpty() ? "https://fakty.ua/rss_feed/ukraina" : url);
-    }
-
-    public void setNewsMutableLiveData(News newsMutableLiveData) {
-        mNewsMutableLiveData.setValue(newsMutableLiveData);
     }
 
     @Override
@@ -49,7 +41,7 @@ public class MainViewModel extends ViewModel implements NewsRepository.NewsRepos
         mMainViewModelCallbacks.noMoreData();
     }
 
-    public interface MainViewModelCallbacks{
+    public interface MainViewModelCallbacks {
         void noMoreData();
     }
 }
