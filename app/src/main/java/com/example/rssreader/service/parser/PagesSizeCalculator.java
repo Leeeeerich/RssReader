@@ -37,10 +37,10 @@ public class PagesSizeCalculator {
     }
 
     private Callable<Void> createTask(final News news) {
+        increment();
         return new Callable<Void>() {
             @Override
             public Void call() {
-                increment();
                 try {
                     InputStream is = NetworkFactory.getUrlConnection(news.getUrl()).getInputStream();
                     Log.d(getClass().getName(), "Ids thread = " + Thread.currentThread());
@@ -79,7 +79,7 @@ public class PagesSizeCalculator {
     private void decrementAndCheck() {
         if (mThreadPool.isShutdown() & mCounter.decrementAndGet() == 0) {
             Log.d(getClass().getName(), "No more task");
-            mCallbacks.calculatingFinished();
+            mCallbacks.onCalculatingFinished();
         }
     }
 
@@ -93,6 +93,6 @@ public class PagesSizeCalculator {
 
         void onErrorCalculated(IOException e);
 
-        void calculatingFinished();
+        void onCalculatingFinished();
     }
 }

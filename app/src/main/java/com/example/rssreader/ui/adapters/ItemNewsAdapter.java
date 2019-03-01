@@ -3,6 +3,7 @@ package com.example.rssreader.ui.adapters;
 import android.databinding.DataBindingUtil;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
     public void onBindViewHolder(@NonNull MyViewHolder myViewHolder, int position) {
         final News newsItem = mNewsList.get(position);
         myViewHolder.setBinding(newsItem);
+        myViewHolder.mBinding.tvNuberByList.setText(String.valueOf(position + 1));
     }
 
     @Override
@@ -48,6 +50,7 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
         } else {
             mNewsList.add(news);
         }
+
         notifyDataSetChanged();
     }
 

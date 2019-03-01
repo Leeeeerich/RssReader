@@ -7,9 +7,11 @@ import android.arch.lifecycle.ViewModel;
 import com.example.rssreader.model.dto.News;
 import com.example.rssreader.service.repositories.NewsRepository;
 
+import java.util.List;
+
 public class MainViewModel extends ViewModel implements NewsRepository.NewsRepositoryCallbacks {
 
-    private MutableLiveData<News> mNewsMutableLiveData;
+    private MutableLiveData<List<News>> mNewsMutableLiveData;
     private NewsRepository mNewsRepository;
 
     private MainViewModelCallbacks mMainViewModelCallbacks;
@@ -19,12 +21,11 @@ public class MainViewModel extends ViewModel implements NewsRepository.NewsRepos
         mNewsRepository.setNewsRepositoryCallbacks(this);
     }
 
-    public LiveData<News> initNews() {
+    public LiveData<List<News>> initNews() {
         if (mNewsMutableLiveData == null) {
             mNewsMutableLiveData = new MutableLiveData<>();
         }
 
-        mNewsMutableLiveData = mNewsRepository.getNewsMutableLiveData();
         return mNewsMutableLiveData;
     }
 
@@ -33,7 +34,7 @@ public class MainViewModel extends ViewModel implements NewsRepository.NewsRepos
     }
 
     public void getNews(String url) {
-        mNewsRepository.getNewsList(url.isEmpty() ? "https://fakty.ua/rss_feed/ukraina" : url);
+        mNewsRepository.getNewsList(url.isEmpty() ? "https://fakty.ua/rss_feed/ukraina" : url, mNewsMutableLiveData);
     }
 
     @Override

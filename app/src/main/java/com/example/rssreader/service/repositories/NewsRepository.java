@@ -11,11 +11,14 @@ import com.example.rssreader.service.parser.SaxParser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks {
 
     private static volatile NewsRepository instance;
-    private MutableLiveData<News> mNewsMutableLiveData;
+    private MutableLiveData<List<News>> mNewsMutableLiveData;
+    private final List<News> mNewsList = new ArrayList<>();
 
     private SaxParser mSaxParser;
     private PagesSizeCalculator mPagesSizeCalculator;
@@ -43,15 +46,8 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
         return instance;
     }
 
-    public MutableLiveData<News> getNewsMutableLiveData() {
-        if (mNewsMutableLiveData == null) {
-            mNewsMutableLiveData = new MutableLiveData<>();
-        }
-
-        return mNewsMutableLiveData;
-    }
-
-    public void getNewsList(String url) {
+    public void getNewsList(String url, MutableLiveData<List<News>> mutableLiveData) {
+        this.mNewsMutableLiveData = mutableLiveData;
         new Thread(() -> {
             InputStream is = null;
             try {
@@ -83,12 +79,15 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
 
     @Override
     public void onErrorParse(Exception e) {
-        Log.e(getClass().getName(), "Parsed error = " + e.getMessage());
+        Log.e(getClass().getName(), "Parsing error = " + e.getMessage());
     }
 
     @Override
     public void onDataLoaded(News news) {
-        mNewsMutableLiveData.postValue(news);
+        synchronized (mNewsList) {
+            mNewsList.add(news);
+        }
+        mNewsMutableLiveData.postValue(mNewsList);
     }
 
     @Override
@@ -97,7 +96,7 @@ public class NewsRepository implements ISaxParser, PagesSizeCalculator.Callbacks
     }
 
     @Override
-    public void calculatingFinished() {
+    public void onCalculatingFinished() {
         mNewsRepositoryCallbacks.noMoreData();
     }
 

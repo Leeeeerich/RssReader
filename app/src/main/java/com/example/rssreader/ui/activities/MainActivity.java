@@ -3,6 +3,8 @@ package com.example.rssreader.ui.activities;
 import android.arch.lifecycle.ViewModelProviders;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,9 +31,10 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.Mai
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         mViewModel.initNews().observe(this, news -> {
-            Log.d(getLocalClassName(), "ViewModel current Thread = " + Thread.currentThread());
             if (mItemNewsAdapter != null) {
-                mItemNewsAdapter.addNews(news);
+                mItemNewsAdapter.setNewsList(news);
+                mBinding.tvTime.setText(String.valueOf((System.nanoTime() - mStartTime) / 1000000));
+                mBinding.tvNumberOf.setText(String.valueOf(mItemNewsAdapter.getItemCount()));
             }
         });
 
@@ -55,7 +58,5 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.Mai
     @Override
     public void noMoreData() {
         mBinding.progressBar.setVisibility(View.INVISIBLE);
-        mBinding.tvTime.setText(String.valueOf((System.nanoTime() - mStartTime) / 1000000));
-        mBinding.tvNumberOf.setText(String.valueOf(mItemNewsAdapter.getItemCount()));
     }
 }
