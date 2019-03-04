@@ -30,7 +30,6 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
     public void onBindViewHolder(@NonNull MyViewHolder myViewHolder, int position) {
         final News newsItem = mNewsList.get(position);
         myViewHolder.setBinding(newsItem);
-        myViewHolder.mBinding.tvNuberByList.setText(String.valueOf(position + 1));
     }
 
     @Override
@@ -40,17 +39,6 @@ public class ItemNewsAdapter extends RecyclerView.Adapter<ItemNewsAdapter.MyView
 
     public void setNewsList(List<News> newsList) {
         this.mNewsList = newsList;
-        notifyDataSetChanged();
-    }
-
-    public void addNews(News news){
-        if(mNewsList == null) {
-            mNewsList = new ArrayList<>();
-            mNewsList.add(news);
-        } else {
-            mNewsList.add(news);
-        }
-
         notifyDataSetChanged();
     }
 
