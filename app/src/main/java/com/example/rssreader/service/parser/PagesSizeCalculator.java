@@ -55,7 +55,6 @@ public class PagesSizeCalculator {
                         out.append(buffer, 0, rsz);
                     }
 
-                    news.setSize(String.valueOf(out.length()));
                     mCallbacks.onDataLoaded(news);
                     decrementAndCheck();
                 } catch (IOException e) {
