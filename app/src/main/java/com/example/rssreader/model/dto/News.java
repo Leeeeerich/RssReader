@@ -3,8 +3,11 @@ package com.example.rssreader.model.dto;
 public class News {
 
     private String mTitle;
+    private String mFromChannel;
+    private String mUrlCoverChannel;
     private String mUrl;
-    private String mSize;
+    private String mDescription;
+    private String mUrlCover;
 
     public News() {
     }
@@ -25,11 +28,35 @@ public class News {
         mUrl = url;
     }
 
-    public String getSize() {
-        return mSize;
+    public String getFromChannel() {
+        return mFromChannel;
     }
 
-    public void setSize(String size) {
-        mSize = size;
+    public void setFromChannel(String fromChannel) {
+        mFromChannel = fromChannel;
+    }
+
+    public String getDescription() {
+        return mDescription;
+    }
+
+    public void setDescription(String description) {
+        mDescription = description;
+    }
+
+    public String getUrlCoverChannel() {
+        return mUrlCoverChannel;
+    }
+
+    public void setUrlCoverChannel(String urlCoverChannel) {
+        mUrlCoverChannel = urlCoverChannel;
+    }
+
+    public String getUrlCover() {
+        return mUrlCover;
+    }
+
+    public void setUrlCover(String urlCover) {
+        mUrlCover = urlCover;
     }
 }
